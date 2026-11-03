@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "description": "StockFlow MVP - a minimal multi-tenant SaaS inventory management system",
   "private": true,
+  "author": "Raama Pullabhotla",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Raama0202/stockflow.git"
+  },
+  "keywords": ["inventory", "saas", "multi-tenant", "express", "react", "sqlite"],
   "type": "module",
   "engines": {
     "node": ">=22.13.0"
