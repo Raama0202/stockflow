@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { db } from './db.js';
 import { HttpError } from './errors.js';
-import { IS_PROD, JWT_SECRET, SESSION_COOKIE, SESSION_TTL_SECONDS } from './config.js';
+import { JWT_SECRET, SESSION_COOKIE, SESSION_TTL_SECONDS } from './config.js';
 
 const findSessionUser = db.prepare(`
   SELECT u.id, u.email, u.organization_id AS organizationId,
@@ -16,17 +16,23 @@ export function issueSession(res, user) {
     expiresIn: SESSION_TTL_SECONDS,
   });
   res.cookie(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: IS_PROD,
+    ...cookieOptions(res),
     maxAge: SESSION_TTL_SECONDS * 1000,
-    path: '/',
   });
 }
 
 export function clearSession(res) {
-  res.clearCookie(SESSION_COOKIE, { httpOnly: true, sameSite: 'lax', secure: IS_PROD, path: '/' });
+  res.clearCookie(SESSION_COOKIE, cookieOptions(res));
 }
+
+// `req.secure` honours X-Forwarded-Proto (trust proxy), so HTTPS hosts get Secure cookies
+// while plain-HTTP local runs still work.
+const cookieOptions = (res) => ({
+  httpOnly: true,
+  sameSite: 'lax',
+  secure: res.req.secure,
+  path: '/',
+});
 
 /** Loads the signed-in user into `req.user`; rejects the request otherwise. */
 export function requireAuth(req, res, next) {

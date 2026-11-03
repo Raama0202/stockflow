@@ -10,7 +10,6 @@ export const DATA_DIR = process.env.DATA_DIR || path.join(ROOT_DIR, 'data');
 export const DB_PATH = process.env.DB_PATH || path.join(DATA_DIR, 'stockflow.db');
 export const CLIENT_DIST = path.join(ROOT_DIR, 'client', 'dist');
 export const PORT = Number(process.env.PORT) || 3000;
-export const IS_PROD = process.env.NODE_ENV === 'production';
 export const GLOBAL_DEFAULT_LOW_STOCK = 5;
 export const SESSION_COOKIE = 'sf_session';
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
