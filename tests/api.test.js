@@ -108,6 +108,39 @@ describe('auth', () => {
   });
 });
 
+describe('demo account', () => {
+  test('one-click demo login and the published credentials both work', async () => {
+    const api = client();
+    const info = await api('GET', '/api/auth/demo');
+    assert.equal(info.body.enabled, true);
+
+    const demo = await api('POST', '/api/auth/demo');
+    assert.equal(demo.status, 200);
+    assert.equal(demo.body.user.email, info.body.email);
+    assert.equal((await api('GET', '/api/dashboard')).body.summary.totalProducts, 8);
+
+    const manual = await client()('POST', '/api/auth/login', {
+      email: info.body.email,
+      password: info.body.password,
+    });
+    assert.equal(manual.status, 200);
+  });
+
+  test('a changed demo password is repaired', async () => {
+    const { db } = await import('../server/db.js');
+    const { DEMO_EMAIL, DEMO_PASSWORD, ensureDemoAccount } = await import('../server/seed.js');
+    ensureDemoAccount();
+    db.prepare('UPDATE users SET password_hash = ? WHERE email = ?').run('broken', DEMO_EMAIL);
+
+    assert.equal(ensureDemoAccount(), 'repaired');
+    const res = await client()('POST', '/api/auth/login', {
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+    });
+    assert.equal(res.status, 200);
+  });
+});
+
 describe('products', () => {
   test('full CRUD lifecycle', async () => {
     const api = client();

@@ -26,10 +26,16 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-for /f %%v in ('node -v') do echo   [1/4] Node.js %%v detected.
+for /f %%v in ('node -v') do echo   [1/3] Node.js %%v detected.
 
-if not exist "node_modules\" (
-  echo   [2/4] Installing dependencies - first run only, this can take a minute...
+set NEED_INSTALL=0
+if not exist "node_modules\" set NEED_INSTALL=1
+if "%NEED_INSTALL%"=="0" (
+  call npm ls --silent >nul 2>nul
+  if errorlevel 1 set NEED_INSTALL=1
+)
+if "%NEED_INSTALL%"=="1" (
+  echo   [2/3] Installing dependencies - first run only, this can take a minute...
   call npm install --no-audit --no-fund
   if errorlevel 1 (
     echo.
@@ -38,10 +44,10 @@ if not exist "node_modules\" (
     exit /b 1
   )
 ) else (
-  echo   [2/4] Dependencies already installed.
+  echo   [2/3] Dependencies already installed.
 )
 
-echo   [3/4] Building the web app...
+echo   [3/3] Building the web app...
 call npm run build --silent
 if errorlevel 1 (
   echo.
@@ -50,14 +56,12 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo   [4/4] Preparing database...
-node --disable-warning=ExperimentalWarning server\seed.js
-
-if "%PORT%"=="" set PORT=3000
 set OPEN_BROWSER=1
-echo.
-echo   Opening http://localhost:%PORT% in your browser...
 node --disable-warning=ExperimentalWarning server\index.js
+if "%ERRORLEVEL%"=="3" (
+  timeout /t 3 /nobreak >nul
+  exit /b 0
+)
 
 echo.
 echo   StockFlow has stopped.

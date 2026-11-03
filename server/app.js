@@ -23,7 +23,7 @@ export function createApp() {
     next();
   });
 
-  app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+  app.get('/api/health', (req, res) => res.json({ status: 'ok', app: 'stockflow' }));
   app.use('/api/auth', authRoutes);
   app.use('/api/products', productRoutes);
   app.use('/api/dashboard', dashboardRoutes);

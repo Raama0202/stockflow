@@ -4,6 +4,7 @@ import { db, transaction } from '../db.js';
 import { HttpError } from '../errors.js';
 import { validateLogin, validateSignup } from '../validation.js';
 import { clearSession, issueSession, requireAuth } from '../auth.js';
+import { DEMO_EMAIL, DEMO_ENABLED, DEMO_PASSWORD, ensureDemoAccount } from '../seed.js';
 
 const router = Router();
 
@@ -52,6 +53,22 @@ router.post('/login', async (req, res) => {
 
   if (!user || !valid) throw new HttpError(401, 'Invalid email or password.');
 
+  issueSession(res, user);
+  res.json({ user: publicUser(user) });
+});
+
+router.get('/demo', (req, res) => {
+  res.json(
+    DEMO_ENABLED
+      ? { enabled: true, email: DEMO_EMAIL, password: DEMO_PASSWORD }
+      : { enabled: false },
+  );
+});
+
+router.post('/demo', (req, res) => {
+  if (!DEMO_ENABLED) throw new HttpError(404, 'The demo account is disabled.');
+  ensureDemoAccount();
+  const user = findUserByEmail.get(DEMO_EMAIL);
   issueSession(res, user);
   res.json({ user: publicUser(user) });
 });

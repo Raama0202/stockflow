@@ -37,6 +37,8 @@ export const api = {
   login: (body) => request('POST', '/auth/login', body),
   signup: (body) => request('POST', '/auth/signup', body),
   logout: () => request('POST', '/auth/logout'),
+  demoInfo: () => request('GET', '/auth/demo'),
+  demoLogin: () => request('POST', '/auth/demo'),
 
   dashboard: () => request('GET', '/dashboard'),
 

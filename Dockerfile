@@ -15,4 +15,4 @@ ENV NODE_ENV=production \
 VOLUME ["/app/data"]
 EXPOSE 3000
 
-CMD ["sh", "-c", "npm run seed && npm start"]
+CMD ["npm", "start"]

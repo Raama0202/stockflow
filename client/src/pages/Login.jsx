@@ -1,30 +1,43 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
+import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import Field from '../components/Field.jsx';
 import AuthLayout from './AuthLayout.jsx';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, demoLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(null);
+  const [demo, setDemo] = useState(null);
+
+  useEffect(() => {
+    api
+      .demoInfo()
+      .then((info) => info.enabled && setDemo(info))
+      .catch(() => {});
+  }, []);
 
   const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  const submit = async (e) => {
-    e.preventDefault();
-    setBusy(true);
+  const run = async (kind, action) => {
+    setBusy(kind);
     setErrors({});
     try {
-      await login(form);
+      await action();
       navigate(location.state?.from || '/', { replace: true });
     } catch (err) {
       setErrors({ ...err.fields, form: err.fields ? null : err.message });
-      setBusy(false);
+      setBusy(null);
     }
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    run('login', () => login(form));
   };
 
   return (
@@ -37,7 +50,29 @@ export default function Login() {
         </>
       }
     >
+      {demo && (
+        <div className="demo-box">
+          <div>
+            <p className="demo-title">Try the demo account</p>
+            <p className="demo-creds">
+              <span className="mono">{demo.email}</span>
+              <span className="muted"> / </span>
+              <span className="mono">{demo.password}</span>
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn btn-primary btn-block"
+            onClick={() => run('demo', demoLogin)}
+            disabled={Boolean(busy)}
+          >
+            {busy === 'demo' ? 'Opening demo…' : 'Log in as demo user'}
+          </button>
+        </div>
+      )}
+
       <form onSubmit={submit} noValidate className="stack">
+        {demo && <p className="divider">or log in with your account</p>}
         <Field
           label="Email"
           type="email"
@@ -45,7 +80,6 @@ export default function Login() {
           value={form.email}
           onChange={update('email')}
           error={errors.email}
-          autoFocus
           required
         />
         <Field
@@ -62,8 +96,12 @@ export default function Login() {
             {errors.form}
           </p>
         )}
-        <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={busy}>
-          {busy ? 'Logging in…' : 'Log in'}
+        <button
+          type="submit"
+          className={`btn btn-block btn-lg ${demo ? 'btn-secondary' : 'btn-primary'}`}
+          disabled={Boolean(busy)}
+        >
+          {busy === 'login' ? 'Logging in…' : 'Log in'}
         </button>
       </form>
     </AuthLayout>

@@ -7,23 +7,27 @@ A minimal multi-tenant inventory app built to the **StockFlow MVP (6-hr build) P
 1. Install [Node.js 22.13+](https://nodejs.org) (LTS recommended).
 2. Double-click **`run.bat`**.
 
-The script checks Node, installs dependencies on first run, builds the web app, prepares the database, starts the server, and opens <http://localhost:3000> in your browser. Press `Ctrl+C` in the window to stop.
+The script checks Node, installs dependencies on first run, builds the web app, starts the server, and opens <http://localhost:3000> in your browser. Press `Ctrl+C` in the window to stop.
 
-**Demo account** (created automatically with sample products):
+- If StockFlow is already running, `run.bat` just opens it in the browser.
+- If port 3000 is taken by another app, the server automatically uses the next free port (3001, 3002, …) and prints the URL.
+
+### Logging in
+
+On the login page click **Log in as demo user**. That's it — no typing needed. Or enter the credentials manually:
 
 | Email                | Password   |
 | -------------------- | ---------- |
 | `demo@stockflow.app` | `demo1234` |
 
-Or click **Create an account** to start a fresh organization.
+The demo account (organization "Demo Electronics Store" with 8 sample products, 4 of them low on stock) is created by the server on every start, and its password is reset to `demo1234` if it was changed, so this login always works. You can also click **Create an account** to start a fresh organization. Set `DEMO_ACCOUNT=off` to disable the demo account.
 
 ### Manual start (any OS)
 
 ```bash
 npm install
 npm run build      # build the React frontend into client/dist
-npm run seed       # optional: create the demo account
-npm start          # http://localhost:3000
+npm start          # http://localhost:3000 (also creates the demo account)
 ```
 
 For development with hot reload, run `npm run dev` (API on :3000) and `npm run dev:client` (Vite on :5173, proxies `/api`).
@@ -90,6 +94,8 @@ All endpoints except signup/login/health require the session cookie. Errors retu
 | ------ | --------------------------- | --------------------------------------------- |
 | POST   | `/api/auth/signup`          | `{ email, password, confirmPassword, organizationName }` |
 | POST   | `/api/auth/login`           | `{ email, password }`                         |
+| GET    | `/api/auth/demo`            | Demo account credentials (if enabled)         |
+| POST   | `/api/auth/demo`            | One-click login as the demo user              |
 | POST   | `/api/auth/logout`          | Clear session                                 |
 | GET    | `/api/auth/me`              | Current user + organization                   |
 | GET    | `/api/dashboard`            | Summary totals + low-stock items              |
@@ -111,6 +117,7 @@ All endpoints except signup/login/health require the session cookie. Errors retu
 | `JWT_SECRET`  | auto-generated          | Session signing key. Generated into `data/.jwt-secret` if not set; **set it in production**. |
 | `DATA_DIR`    | `./data`                | Where the SQLite database lives                          |
 | `DB_PATH`     | `$DATA_DIR/stockflow.db`| Full database path (`:memory:` for tests)                |
+| `DEMO_ACCOUNT`| on                      | Set to `off` to disable the demo account and demo button |
 
 ## Deployment
 
@@ -120,7 +127,7 @@ All endpoints except signup/login/health require the session cookie. Errors retu
 2. In Render, choose **New → Blueprint** and select the repo. `render.yaml` configures the build (`npm ci --include=dev && npm run build`), start command, health check, and a generated `JWT_SECRET`.
 3. Open the generated `*.onrender.com` URL.
 
-Render's free tier has an ephemeral filesystem, so the SQLite database resets when the service restarts or redeploys (the demo account is re-created on each start). Attach a persistent disk and set `DATA_DIR` to its mount path to keep data.
+Render's free tier has an ephemeral filesystem, so the SQLite database resets when the service restarts or redeploys (the demo account is re-created on each start, so the demo login always works). Attach a persistent disk and set `DATA_DIR` to its mount path to keep data.
 
 ### Docker (Railway, Fly.io, any VPS)
 
